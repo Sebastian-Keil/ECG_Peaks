@@ -61,10 +61,16 @@ for code in tqdm(codes, desc="Participants"):
     # loading and downsampling raw data to 1000hz
     # This is mainly so that the data is less noisy and takes up less space
     # Additional benefit is that data is now already in ms format
-        raw = mne.io.read_raw_brainvision(path + f"/sub_{code}_{task}.vhdr")
+    # The try loop checks for correct referencing in the BrainVision .vhdr file
+    try:
+        raw = mne.io.read_raw_brainvision(path + f"/pp_{code}_{task}.vhdr")
         raw.load_data()
         raw_re = raw.copy().resample(sfreq=sample_rate)
-        
+    except FileNotFoundError:
+        with open(output + 'log.txt', 'a') as f:
+            print(f'pp_{code}_{task}: Could not find .vmrk file, check .vhdr file for correct reference!' file=f)
+        continue
+
     # Cropping the file to trial length (15 Minutes), if the trial was shorter than
     # 15 Minutes no end point is set
         try:
